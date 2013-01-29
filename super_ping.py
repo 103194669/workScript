@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 #-*- coding:utf-8 -*-
+#Author:left_left
 import socket
 import struct
 import time
@@ -24,13 +25,23 @@ def chksum(packet):
     return sum
 
 def get_data(src_ip, dst_ip):
-    tcp_header = struct.pack('bbHHHbbH', 0x45, 0, 1490, 
-                            12736, 0, 64, 1, 0) \
-                            + socket.inet_aton(src_ip) + socket.inet_aton(dst_ip)
+    try:
+        src_bin = socket.inet_aton(src_ip)
+    except socket.error, e:
+        print "src address error: %s" % e
+        exit(1)
+
+    try:
+        dst_bin = socket.inet_aton(dst_ip)
+    except socket.error, e:
+        print "dst address error: %s" % e
+        exit(1)
+
+    tcp_header = struct.pack('bbHHHbbH', 0x45, 0, 1490, 12736, 
+                            0, 64, 1, 0) + src_bin + dst_bin
     sum = chksum(tcp_header)
-    tcp_header = struct.pack('bbHHHbbH', 0x45, 0, 1490,
-                            12736, 0, 64, 1, sum) + \
-                            socket.inet_aton(src_ip) + socket.inet_aton(dst_ip)
+    tcp_header = struct.pack('bbHHHbbH', 0x45, 0, 1490, 12736, 
+                            0, 64, 1, sum) + src_bin + dst_bin
     icmp_header = struct.pack('bbHHh', 8, 0, 0, 1, 1)
     sum = chksum(icmp_header)
     icmp_header = struct.pack('bbHHh', 8, 0, sum, 1, 1)
@@ -51,13 +62,8 @@ def get_opt():
 
 def main():
     options = get_opt()
-    try:
-        dst_ip = socket.gethostbyname(options.dst_ip)
-        if not dst_ip:
-            raise
-    except:
-        print "Please input the correct host ..."
-        exit(1)
+    src_ip = options.src_ip
+    dst_ip = options.dst_ip
 
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_RAW, 1)
@@ -66,15 +72,15 @@ def main():
         print "Create socket error: %s" %e
         exit(1)
 
-    send_data = get_data('8.8.8.8', dst_ip)
+    send_data = get_data(src_ip, dst_ip)
 
     try:
         s.sendto(send_data, (dst_ip, 1))
     except socket.error, e:
-        print "dst ip address error: %s" % e
+        print "dst address error: %s" % e
         exit(1)
     
-    print "Now begin super ping to %s" % dst_ip
+    print "Now begin super ping from %s to %s" % (src_ip, dst_ip)
     i = 1
     while 1:
         s.sendto(send_data, (dst_ip, 1))
@@ -84,4 +90,7 @@ def main():
         #time.sleep(0.1)
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        print "super ping closed..."
