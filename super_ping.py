@@ -16,12 +16,14 @@ def chksum(packet):
     while i < p_len-1:
         sum = (ord(packet[i]) << 8) + ord(packet[i+1]) + sum
         i += 2
+        
     if p_len/2 & 1:
         sum += ord(packet[p_len-1])
+        
     sum = (sum >> 16) + (sum & 0xffff)
     sum = sum + (sum >> 16)
-    sum = sum >> 8 | (sum << 8 & 0xffff)
     sum = sum ^ 0xffff
+    
     return sum
 
 def get_data(src_ip, dst_ip):
@@ -41,10 +43,10 @@ def get_data(src_ip, dst_ip):
                             0, 64, 1, 0) + src_bin + dst_bin
     sum = chksum(tcp_header)
     tcp_header = struct.pack('bbHHHbbH', 0x45, 0, 1490, 12736, 
-                            0, 64, 1, sum) + src_bin + dst_bin
+                            0, 64, 1, socket.htons(sum)) + src_bin + dst_bin
     icmp_header = struct.pack('bbHHh', 8, 0, 0, 1, 1)
     sum = chksum(icmp_header)
-    icmp_header = struct.pack('bbHHh', 8, 0, sum, 1, 1)
+    icmp_header = struct.pack('bbHHh', 8, 0, socket.htons(sum), 1, 1)
     icmp_data = b'\x00' * 1450
 
     return tcp_header + icmp_header + icmp_data
@@ -80,7 +82,7 @@ def main():
         print "dst address error: %s" % e
         exit(1)
     
-    print "Now begin super ping from %s to %s" % (src_ip, dst_ip)
+    print "Now begin super ping from %s to %s" %(src_ip, dst_ip)
     i = 1
     while 1:
         s.sendto(send_data, (dst_ip, 1))
