@@ -39,17 +39,17 @@ def get_data(src_ip, dst_ip):
         print "dst address error: %s" % e
         exit(1)
 
-    tcp_header = struct.pack('bbHHHbbH', 0x45, 0, 1490, 12736, 
+    ip_header = struct.pack('bbHHHbbH', 0x45, 0, 1490, 12736, 
                             0, 64, 1, 0) + src_bin + dst_bin
-    sum = chksum(tcp_header)
-    tcp_header = struct.pack('bbHHHbbH', 0x45, 0, 1490, 12736, 
+    sum = chksum(ip_header)
+    ip_header = struct.pack('bbHHHbbH', 0x45, 0, 1490, 12736, 
                             0, 64, 1, socket.htons(sum)) + src_bin + dst_bin
     icmp_header = struct.pack('bbHHh', 8, 0, 0, 1, 1)
     sum = chksum(icmp_header)
     icmp_header = struct.pack('bbHHh', 8, 0, socket.htons(sum), 1, 1)
     icmp_data = b'\x00' * 1450
 
-    return tcp_header + icmp_header + icmp_data
+    return ip_header + icmp_header + icmp_data
 
 def get_opt():
     parser = OptionParser()
