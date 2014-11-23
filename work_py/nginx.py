@@ -25,6 +25,24 @@ def add_key(num, block):
             if b[0] == "include":
                 include(b[1])
             else:
+                b_t = ""
+                b_start = ""
+                b_b = []
+                for j in xrange(len(b)):
+                    print j
+                    if b[j].startswith("'") and (b[j].count("'") - b[j].count(r"\'"))%2:
+                        b_start = "'"
+                        b_t = b[j]
+                    elif b[j].startswith('"') and (b[j].count('""') - b[j].count(r'\"'))%2:
+                        b_start = '"'
+                        b_t = b[j]
+                    elif b_start:
+                        b_t += b[j]
+                        if b[j].endswith(b_start):
+                            b_b.append(b_t)
+                            b_start = ""
+                    else:
+                        b_b.append(b[j])
                 block_list[key] = b
         if i:
             block_num -= 1
@@ -34,8 +52,14 @@ def split_line(line):
     l = line.strip(" ;")
     if l:
         l = l.split(";")
+        l_l = ""
         for i in xrange(len(l)):
-            add_key(i, l[i])
+            if l[i].endswith("\\"):
+                l_l += l[i]
+            elif l_l:
+                add_key(i, l_l)
+            else:
+                add_key(i, l[i])
 
 def get_line(f):
     global key
