@@ -4,6 +4,7 @@ import sys
 
 
 class ConfParse(object):
+
     def __init__(self, f):
         self.f = f
         self.block_list = {}
@@ -20,15 +21,15 @@ class ConfParse(object):
                 f = os.path.join(root, f)
                 if r.search(f):
                     self.f = f
-                    self.get_char() 
-    
+                    self.get_char()
+
     def get_char(self):
         f_size = os.path.getsize(self.f)
         try:
             f = open(self.f)
         except Exception, e:
             print e
-        
+
         c_p = ""
         c_one = 0
         c_tow = 0
@@ -48,34 +49,33 @@ class ConfParse(object):
             if n_flag:
                 continue
             if c_p != "\\" and c_flag:
-                if c=="#":
+                if c == "#":
                     n_flag = 1
                     continue
-                if c=="{":
+                if c == "{":
                     block = ""
                     flag = 0
-                    self.key = self.key + 10**(18-(self.block_num*3))
+                    self.key = self.key + 10 ** (18 - (self.block_num * 3))
                     self.block_list[self.key] = b_list
                     b_list = []
-    
                     self.block_num += 1
                     continue
-                if c=="}":
+                if c == "}":
                     self.block_num -= 1
-                    self.key = self.key / (10**(18-((self.block_num)*3))) * (10**(18-((self.block_num)*3)))
-                    continue 
-                if c==";":
+                    self.key = self.key / (10 ** (18 - ((self.block_num) * 3))) * (10 ** (18 - ((self.block_num) * 3)))
+                    continue
+                if c == ";":
                     b_list.append(block)
                     block = ""
                     flag = 0
-                    self.key = self.key + 10**(18-(self.block_num*3))
+                    self.key = self.key + 10 ** (18 - (self.block_num * 3))
                     self.block_list[self.key] = b_list
                     if b_list[0] == "include":
                         self.include(b_list[1])
                     b_list = []
                     continue
             if c_p != "\\":
-                if c=="'":
+                if c == "'":
                     c_one += 1
                     c_flag = 0
                     if c_one == 2:
@@ -83,7 +83,7 @@ class ConfParse(object):
                         c_flag = 1
                     block += c
                     continue
-                if c_tow=='"' and not c_one:
+                if c_tow == '"' and not c_one:
                     c_tow += 1
                     f_flag = 0
                     if c_tow == 2:
@@ -103,18 +103,19 @@ class ConfParse(object):
             else:
                 block += c
                 flag = 1
+
     def run(self):
         self.get_char()
         return self.block_list
 
+
 def main():
-    
     try:
         CONF = sys.argv[1]
-    except Exception,e:
+    except Exception, e:
         print e
         sys.exit(1)
-        
+
     a = ConfParse(CONF)
     block_list = a.run()
     list = sorted(block_list.items(), key=lambda d: d[0])
