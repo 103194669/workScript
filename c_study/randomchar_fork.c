@@ -8,18 +8,26 @@ int s_len_1;
 int s_len_2;
 char *result;
 char string[]="0123456789";
+FILE *fp;
 
 int main(){
     int i;
     char c;
+    char s[]="\n";
+    char f[10];
+
     s_len = strlen(string);
     s_len_1 = s_len - 1;
     s_len_2 = s_len - 2;
-    result = malloc(s_len);
+    result = malloc(s_len+1);
+    result[s_len]=s[0];
     for(i=0; i<s_len;i++){
         result[s_len_1] = string[s_len_1];
         if(fork()==0){
+            sprintf(f, "tmp_%d",i);
+            fp=fopen(f,"a");
             randomChar(0);
+            fclose(fp);
             exit(0);
         }
         c = string[s_len_1];
@@ -38,7 +46,7 @@ int randomChar(int l_s_len){
     char c;
 
     if(l_s_len==s_len_1){
-        printf("%s\n", result);
+        fputs(result,fp);
         return 0;
     }
 
